@@ -1,44 +1,53 @@
 # Environment variables
+
 .env
 .env.*
 !.env.example
 
 # Node
+
 node_modules/
 npm-debug.log*
 
 # OS files
+
 .DS_Store
 Thumbs.db
 desktop.ini
 
 # Editors
+
 .vscode/
 .idea/
 
 # Logs
+
 *.log
 logs/
 
+# Temporary files
+
+tmp/
+temp/
+
 # n8n local data
+
 .n8n/
 
 # Secrets
+
 credentials.json
 secrets.json
 *.pem
 *.key
 
-# Database
-*.sql
-*.sqlite
-*.db
-
 # Python
+
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 
 # Generated files
+
 *.zip
