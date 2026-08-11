@@ -264,11 +264,11 @@
       "name": "Send Welcome Message",
       "webhookId": "87f27cc8-90d1-4219-8152-d771ac8d2b84",
       "credentials": {
-        "telegramApi": {
-          "id": "oGp1TAEiCrqA1o4i",
-          "name": "BookScout Telegram"
-        }
-      }
+  "telegramApi": {
+    "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+    "name": "BookScout Telegram Credential"
+  }
+}
     },
     {
       "parameters": {
@@ -300,7 +300,7 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "5WvX9r8FtIshc1sZ",
+          "value": "Sub_OCR_Scan_id",
           "mode": "list",
           "cachedResultUrl": "/workflow/5WvX9r8FtIshc1sZ",
           "cachedResultName": "Sub_OCR_Scan"
@@ -331,7 +331,7 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "0n98ueOgMgAkX2yv",
+          "value": "Sub_Book_Search_id",
           "mode": "list",
           "cachedResultUrl": "/workflow/0n98ueOgMgAkX2yv",
           "cachedResultName": "Sub_Book_Search"
@@ -361,7 +361,7 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "pA0q3lCvFEh9CnK3",
+          "value": "Sub_Book_Recommend_id",
           "mode": "list",
           "cachedResultUrl": "/workflow/pA0q3lCvFEh9CnK3",
           "cachedResultName": "Sub_Book_Recommend"
@@ -647,7 +647,7 @@
     "binaryMode": "separate",
     "availableInMCP": false,
     "timeSavedMode": "fixed",
-    "errorWorkflow": "M6hAyG6iz29cuogg",
+    "errorWorkflow": "error_workflow_id",
     "callerPolicy": "workflowsFromSameOwner"
   },
   
