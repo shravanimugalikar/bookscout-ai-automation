@@ -78,6 +78,7 @@ Users can request recommendations such as:
 
 ```text
 /recommend Atomic Habits
+```
 
 The recommendation workflow uses an LLM to generate multiple relevant book suggestions.
 
@@ -98,6 +99,7 @@ They can simply ask:
 
 ```text
 Tell me about Dune.
+```
 
 What should I read after The Hobbit?
 
@@ -143,6 +145,7 @@ Route User Request
        │
        └── 💬 Other Text
               └── AI Book Assistant
+```
 
 This prevents unnecessary LLM calls for structured requests while still allowing natural conversational interaction.
 
@@ -257,5 +260,10 @@ Catches any execution failure not already handled locally, and logs it to **Post
 
 ---
 
+## 👩‍💻 Author
+
+Shravani Mugalikar
+
+AI & Automation Enthusiast
 
 
