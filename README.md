@@ -9,8 +9,6 @@ Users can scan a book cover, type a search or recommend command, or just ask nat
 ![OpenLibrary](https://img.shields.io/badge/OpenLibrary-API-green)
 ![AI Agent](https://img.shields.io/badge/AI-Agent%20%2B%20LLM-purple)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Error%20Logging-336791)
-![Render](https://img.shields.io/badge/Hosted%20on-Render-46E3B7)
-![Cost](https://img.shields.io/badge/Infrastructure%20Cost-%240-brightgreen)
 
 ---
 
@@ -112,15 +110,15 @@ Catches any execution failure not already handled locally, and logs it to **Post
 
 | Main Router | OCR Sub-Workflow |
 |---|---|
-| ![Main Router](screenshots/main-router.png) | ![OCR Workflow](screenshots/sub-ocr-scan.png) |
+| ![Main Router](screenshots/main-workflow.png) | ![OCR Workflow](screenshots/ocr-workflow.png) |
 
 | Book Search | Recommendations |
 |---|---|
-| ![Book Search](screenshots/sub-book-search.png) | ![Recommendations](screenshots/sub-book-recommend.png) |
+| ![Book Search](screenshots/search-workflow.png) | ![Recommendations](screenshots/recommendation-workflow.png) |
 
 | Global Error Handler |
 |---|
-| ![Error Handler](screenshots/global-error-handler.png) |
+| ![Error Handler](screenshots/error-handler.png) |
 
 ---
 
