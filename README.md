@@ -55,7 +55,7 @@ Users can search for books using:
 
 ```text
 /search The Hobbit
-
+```
 The search workflow:
 
 - Extracts the search query
@@ -99,13 +99,13 @@ They can simply ask:
 
 ```text
 Tell me about Dune.
-```
 
 What should I read after The Hobbit?
 
 I loved Harry Potter. What should I read next?
+```
 
-- Messages that do not match predefined routes are sent to the AI Book Assistant.
+Messages that do not match predefined routes are sent to the AI Book Assistant.
 
 The agent uses:
 
@@ -216,8 +216,6 @@ Catches any execution failure not already handled locally, and logs it to **Post
 
 ## 🖼️ Screenshots
 
-> Save your exported screenshots into a `/screenshots` folder in the repo root, then they'll render below on GitHub automatically.
-
 | Main Router | OCR Sub-Workflow |
 |---|---|
 | ![Main Router](screenshots/main-workflow.png) | ![OCR Workflow](screenshots/ocr-workflow.png) |
@@ -252,9 +250,13 @@ Catches any execution failure not already handled locally, and logs it to **Post
 
 ```
 /search The Hobbit
+
 /recommend Atomic Habits
+
 📷 [send a photo of any book cover]
+
 "What should I read after Dune?"
+
 "I loved Harry Potter, what's next?"
 ```
 
