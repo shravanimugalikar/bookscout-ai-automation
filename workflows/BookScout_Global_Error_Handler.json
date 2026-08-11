@@ -1,0 +1,87 @@
+{
+  "name": "BookScout_Global_Error_Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const execution = $json.execution || {};\nconst workflow = $json.workflow || {};\nconst error = execution.error || {};\n\nreturn [\n  {\n    json: {\n      workflow_name: workflow.name || \"Unknown Workflow\",\n      execution_id: execution.id || \"Unknown\",\n      error_node: execution.lastNodeExecuted || \"Unknown Node\",\n      error_message:\n        error.description ||\n        error.message ||\n        \"Unknown Error\",\n      error_details: error\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "7d30d1a3-e641-45fc-875f-f76eb3c85d26",
+      "name": "Prepare Error Message"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO workflow_error_logs\n(\n    timestamp,\n    workflow_name,\n    execution_id,\n    error_node,\n    error_message,\n    error_details\n)\nVALUES\n(\n    CURRENT_TIMESTAMP,\n    $1,\n    $2,\n    $3,\n    $4,\n    $5::jsonb\n);",
+        "options": {
+          "queryReplacement": "={{ $json.workflow_name || 'Unknown Workflow' }}, {{ String($json.execution_id || 'Unknown') }}, {{ $json.error_node || 'Unknown Node' }}, {{ $json.error_message || 'Unknown Error' }}, {{ JSON.stringify($json.error_details || {}) }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        416,
+        0
+      ],
+      "id": "a787fb38-169f-473d-8d61-bf9ace52bc19",
+      "name": "Log Error to PostgreSQL",
+      "credentials": {
+        "postgres": {
+          "id": "your_postgres_credential",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b8c76cc1-645a-4301-9c47-2378befe9531",
+      "name": "Capture Workflow Error"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Prepare Error Message": {
+      "main": [
+        [
+          {
+            "node": "Log Error to PostgreSQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Prepare Error Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  
+  "nodeGroups": [],
+  "id": "M6hAyG6iz29cuogg",
+  "tags": []
+}

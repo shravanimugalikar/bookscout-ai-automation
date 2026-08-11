@@ -1,0 +1,341 @@
+{
+  "name": "Sub_Book_Search",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const text = $json.message.text;\n\nreturn [{\n  json: {\n    chat_id: $json.message.chat.id,\n    query: text.replace(\"/search\", \"\").trim()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        352
+      ],
+      "id": "231d5640-90bd-473a-a018-e66f60a0f434",
+      "name": "Extract Search Query"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Search response\nconst search = $('Open Library Search').first().json.docs[0];\n// Work details response\nconst details = $('Get Book Details').first().json;\n\n// Function to clean descriptions\nfunction sanitizeDescription(text) {\n  if (!text) return \"No description available.\";\n  return text\n    // Remove Markdown links [text](url)\n    .replace(/\\[.*?\\]\\(.*?\\)/g, '')\n    // Remove raw URLs\n    .replace(/https?:\\/\\/\\S+/g, '')\n    // Collapse multiple spaces/newlines\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\n// Function to fix ALL-CAPS \"shouting\" words from jacket-copy formatting\nfunction normalizeShouting(text) {\n  return text.replace(/\\b[A-Z]{2,}\\b/g, (word) => {\n    // Keep short real acronyms (2-3 letters) as-is, title-case the rest\n    if (word.length <= 3) return word;\n    return word.charAt(0) + word.slice(1).toLowerCase();\n  });\n}\n\n// Get description\nlet description = \"No description available.\";\nif (details.description) {\n  if (typeof details.description === \"string\") {\n    description = details.description;\n  }\n  else if (details.description.value) {\n    description = details.description.value;\n  }\n} else if (details.subjects) {\n  description = details.subjects\n    .slice(0, 5)\n    .join(\", \");\n}\n\n// Clean and normalize description\ndescription = normalizeShouting(sanitizeDescription(description));\n\n// Truncate long descriptions, preferring a sentence boundary\nconst MAX_LENGTH = 500;\nif (description.length > MAX_LENGTH) {\n  const truncated = description.substring(0, MAX_LENGTH);\n  const lastSentenceEnd = Math.max(\n    truncated.lastIndexOf(\". \"),\n    truncated.lastIndexOf(\"! \"),\n    truncated.lastIndexOf(\"? \")\n  );\n  if (lastSentenceEnd > MAX_LENGTH * 0.5) {\n    // Only use the sentence boundary if it's not too far back\n    description = truncated.substring(0, lastSentenceEnd + 1);\n  } else {\n    const lastSpace = truncated.lastIndexOf(\" \");\n    description = truncated.substring(0, lastSpace > 0 ? lastSpace : MAX_LENGTH) + \"...\";\n  }\n}\n\nreturn [{\n  json: {\n    chat_id: $('Receive Book Search Request')\n      .first()\n      .json\n      .message\n      .chat\n      .id,\n    title: search.title || \"Unknown\",\n    author: search.author_name\n      ? search.author_name.join(\", \")\n      : \"Unknown\",\n    year: search.first_publish_year || \"Unknown\",\n    cover: search.cover_i\n      ? `https://covers.openlibrary.org/b/id/${search.cover_i}-L.jpg`\n      : \"\",\n    description\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        256
+      ],
+      "id": "61b00dc3-a84c-4849-b35b-5737e6e39a39",
+      "name": "Format Book Details"
+    },
+    {
+      "parameters": {
+        "url": "https://openlibrary.org/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{$json.query}}"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        688,
+        352
+      ],
+      "id": "d194198f-c53f-4a33-a13c-b27a4b266f69",
+      "name": "Open Library Search",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "url": "=https://openlibrary.org{{$json.docs[0].key}}.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1104,
+        256
+      ],
+      "id": "e7a9f796-4c99-4ca4-a0dd-a4c691422123",
+      "name": "Get Book Details",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "typeVersion": 1.1,
+      "name": "Receive Book Search Request",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        272,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{$json.chat_id}}",
+        "file": "={{$json.cover}}",
+        "additionalFields": {
+          "caption": "=📚 {{$json.title}}\n\n✍ Author: {{$json.author}}\n\n📅 First Published: {{$json.year}}\n\n📖 Summary:\n{{$json.description}}",
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1776,
+        128
+      ],
+      "id": "e9783426-ab12-478f-bd92-453c69ba744d",
+      "name": "Send Book Cover & Details",
+      "webhookId": "1cfce5f0-bb26-4cfc-b6e8-fa416ae8ab05",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+  "telegramApi": {
+    "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+    "name": "BookScout Telegram Credential"
+  }
+}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2a73f1e3-a10f-4b49-a55d-1338ab628655",
+              "leftValue": "={{ $json.cover }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1520,
+        256
+      ],
+      "id": "36cde141-0524-4088-831d-5dac5eb0207e",
+      "name": "Check Book Cover Availability"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "09582732-07a1-4111-8299-df73e9746362",
+              "leftValue": "={{$json.docs.length}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        352
+      ],
+      "id": "39cbffc3-1a0a-4c32-918f-986826fc2b98",
+      "name": "Check Search Results"
+    },
+    {
+      "parameters": {
+        "chatId": "={{$('Receive Book Search Request').first().json.message.chat.id}}",
+        "text": "❌ Sorry, I couldn't find any matching books.\n\nTry searching like:\n\n/search Atomic Habits\n\n/search The Hobbit\n\n/search Harry Potter",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1104,
+        448
+      ],
+      "id": "f70fe1f6-691c-480c-9a6e-adcb157b8044",
+      "name": "Send No Results Message",
+      "webhookId": "27686f8c-bf2b-4ca8-9a87-1e7fc54127f4",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+  "telegramApi": {
+    "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+    "name": "BookScout Telegram Credential"
+  }
+}
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=📚 <b>{{ $json.title }}</b>  \n✍ <b>Author:</b> {{ $json.author }}  \n📅 <b>First Published:</b> {{ $json.year }}\n📖 <b>Summary:</b> {{ $json.description }} \nℹ️ Cover image is not available.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1776,
+        336
+      ],
+      "id": "c018916f-23cc-4c60-81f1-413c9036e436",
+      "name": "Send Book Details as Text",
+      "webhookId": "37561a9d-4ed0-490f-b05e-b483f9c81c30",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+  "telegramApi": {
+    "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+    "name": "BookScout Telegram Credential"
+  }
+}
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract Search Query": {
+      "main": [
+        [
+          {
+            "node": "Open Library Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Book Details": {
+      "main": [
+        [
+          {
+            "node": "Check Book Cover Availability",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open Library Search": {
+      "main": [
+        [
+          {
+            "node": "Check Search Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Book Details": {
+      "main": [
+        [
+          {
+            "node": "Format Book Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Book Search Request": {
+      "main": [
+        [
+          {
+            "node": "Extract Search Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Book Cover Availability": {
+      "main": [
+        [
+          {
+            "node": "Send Book Cover & Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Book Details as Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Search Results": {
+      "main": [
+        [
+          {
+            "node": "Get Book Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send No Results Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  
+  "nodeGroups": [],
+  "id": "0n98ueOgMgAkX2yv",
+  "tags": []
+}

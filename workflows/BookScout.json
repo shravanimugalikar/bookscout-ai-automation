@@ -1,0 +1,656 @@
+{
+  "name": "BookScout",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        160,
+        688
+      ],
+      "id": "8d5c8631-cb84-4edf-9462-ec38d81db699",
+      "name": "Groq Chat Model",
+      "credentials": {
+  "groqApi": {
+    "id": "YOUR_GROQ_CREDENTIAL_ID",
+    "name": "BookScout Groq Credential"
+  }
+}
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Receive Telegram Message').first().json.message.chat.id.toString() }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        512,
+        688
+      ],
+      "id": "d71027a6-a30d-4841-8a28-eb911181efc1",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        688
+      ],
+      "id": "4c829787-b272-4388-9ce3-a045acdb5fdd",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+  "googlePalmApi": {
+    "id": "YOUR_GEMINI_CREDENTIAL_ID",
+    "name": "BookScout Gemini Credential"
+  }
+}
+    },
+    {
+      "parameters": {
+        "toolDescription": "=Search Open Library for factual information about books.\n\nUse this tool whenever the user asks for factual information about:\n- a specific book\n- a book title\n- an author\n- an ISBN\n- publication details\n- book details\n\nThe `q` parameter must contain the most relevant search query extracted from the user's message.\n\nQuery selection:\n- For a specific book, use the book title.\n- For an author question, use the author's name.\n- For an ISBN question, use the ISBN.\n- For other book-related factual questions, use the most relevant search phrase from the user's request.\n\nThe q parameter is defined automatically by the model. Always provide the actual query value; never use placeholder text or hard-coded example values.\n\nCall this tool before answering factual questions about books.\n\nAfter receiving the results, use them to provide an accurate, concise response.\nDo not invent information that is not supported by the returned data.",
+        "url": "https://openlibrary.org/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            },
+            {
+              "name": "limit",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        688,
+        688
+      ],
+      "id": "5d01ef9b-5707-40c5-86fb-da9a59ff7942",
+      "name": "Search Open Library"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ !!$json.message.photo }}",
+                    "rightValue": "Sub_OCR_Scan",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "4f9296fb-8698-4144-879d-a9beaa1fa548"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Photo Route"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6f2a56eb-5baa-4e3e-85e5-2231c2ce297c",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "/Start Route "
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "da223267-f57d-459d-a28a-e5545dde44c0",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "/Help Route"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3031ac1e-7ab0-45f7-8321-3279f397991f",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/search",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "/Search Route"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f2663323-ce71-488a-8c75-b61adc6ba1b4",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/recommend",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "/Recommend Route"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        -112
+      ],
+      "id": "f9bccf85-226d-45fb-a62c-7629f29efd83",
+      "name": "Route User Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=You are BookScout, a helpful Telegram book assistant.\n\nYou have access to one tool:\n\nSearch Open Library\n- Use this tool whenever the user asks for factual information about a book, including:\n  - a specific book\n  - a book title\n  - an author\n  - an ISBN\n  - publication details\n  - other factual book details\n\nTool usage rules:\n\n1. When a user asks a factual question about a book or author, you MUST call Search Open Library before answering.\n2. For the tool's `q` parameter, provide the most relevant search query extracted from the user's message.\n3. Do NOT use placeholder text, example values, or fixed book titles.\n4. If the user mentions a specific book title, use that book title as the `q` value.\n5. If the user asks about an author, use the author's name as the `q` value.\n6. If the user provides an ISBN, use the ISBN as the `q` value.\n7. Call Search Open Library only once for each user request.\n8. After receiving the tool result, use the returned data to answer the user's question.\n9. Do not call the tool again after receiving a result.\n10. If the tool returns no useful results, clearly tell the user that the requested book information could not be found.\n11. If the tool returns an error, tell the user that the book information service is temporarily unavailable.\n12. Never invent or assume factual book information that is not supported by the tool result.\n13. Do not expose Open Library internal IDs, author IDs, work IDs, edition IDs, or series keys unless the user explicitly asks for them.\n14. When multiple results are returned, prefer the result whose title most closely matches the user's requested book title.\n15. If the user asks about a specific book, do not substitute another book from the same series merely because it appears in the search results.\n16. Keep the final response concise, clear, friendly, and suitable for Telegram.\n\nImportant:\nThe `q` parameter is dynamically provided to the tool by the model. Always supply the actual relevant search query from the user's current message.\n\nRecommendation behavior:\n\nWhen the user asks for recommendations, suggestions, or asks what they should read:\n\n1. Generate 3-5 recommendations based on the user's stated interests, genre, themes, authors, or reading preferences.\n2. Do NOT call Search Open Library solely to generate recommendations.\n3. For each recommendation, provide:\n   - Title\n   - Author\n   - A short explanation of why it matches the user's interests.\n4. Do not include publication dates, ISBNs, edition information, series numbers, or other detailed metadata unless the user specifically asks for them.\n5. Do not make unsupported claims such as bestseller status, awards, critical reception, or historical significance unless verified using Search Open Library.\n6. Never guess or invent factual information.\n7. If you are uncertain about a book or author, omit that recommendation.\n8. Keep the response concise, friendly, and suitable for Telegram.\n\nImportant:\nIf Search Open Library is used to verify a recommendation, do not replace the recommended book with an unrelated search result merely because it appears in the results. Use the search results only to verify the requested book's factual information.",
+          "maxIterations": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        480,
+        432
+      ],
+      "id": "faea5827-7d02-4c05-b87b-7dd45be9f5f3",
+      "name": "AI Book Assistant",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "={{\n`<b>📚 Welcome to BookScout!</b>\n\nI can help you discover books in multiple ways.\n\n<b>🔍 Commands</b>\n\n<code>/search</code>\n<code>/recommend</code>\n<code>/help</code>\n\n<b>📸 Scan a Book</b>\n\nSimply send a book cover photo and I'll identify it.\n\n<b>💬 Chat Naturally</b>\n\n• Tell me about Dune\n• Recommend mystery novels\n• I loved Harry Potter. What should I read next?\n\nHappy Reading! 📖`\n}}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        528,
+        -80
+      ],
+      "id": "7abd5b42-66f1-4cc2-8bfb-932ad5a12f5d",
+      "name": "Send Welcome Message",
+      "webhookId": "87f27cc8-90d1-4219-8152-d771ac8d2b84",
+      "credentials": {
+        "telegramApi": {
+          "id": "oGp1TAEiCrqA1o4i",
+          "name": "BookScout Telegram"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Receive Telegram Message').first().json.message.chat.id.toString() }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        432
+      ],
+      "id": "ba7adaa5-14c4-4c12-bf1f-636be657647d",
+      "name": "Send AI Response",
+      "webhookId": "e713ec13-76ba-4f59-b72c-5b022fa2b464",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+  "telegramApi": {
+    "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+    "name": "BookScout Telegram Credential"
+  }
+}
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "5WvX9r8FtIshc1sZ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/5WvX9r8FtIshc1sZ",
+          "cachedResultName": "Sub_OCR_Scan"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        -240
+      ],
+      "id": "c1684fb4-3b14-4164-a809-38038c933744",
+      "name": "Run OCR Workflow",
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "0n98ueOgMgAkX2yv",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/0n98ueOgMgAkX2yv",
+          "cachedResultName": "Sub_Book_Search"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        80
+      ],
+      "id": "32e43eb6-4e06-4f5b-a8f0-a36908f9b574",
+      "name": "Run Book Search Workflow",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "pA0q3lCvFEh9CnK3",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/pA0q3lCvFEh9CnK3",
+          "cachedResultName": "Sub_Book_Recommend"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "chatId"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        256
+      ],
+      "id": "1c34bcf1-cdfe-48a3-9d45-0d0deca82706",
+      "name": "Run Book Recommendation Workflow",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Receive Telegram Message').first().json.message.chat.id }}",
+        "text": "=⚠️ BookScout is temporarily unavailable. Please try again later.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        -224
+      ],
+      "id": "7a8d11ae-0978-41dc-9e00-1938dfa95aa6",
+      "name": "Notify OCR Processing Error",
+      "webhookId": "70281bf4-07b4-46d1-9868-ecc7e9521ed1",
+      "credentials": {
+  "telegramApi": {
+    "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+    "name": "BookScout Telegram Credential"
+  }
+}
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Receive Telegram Message').first().json.message.chat.id }}",
+        "text": "=⚠️ BookScout is temporarily unavailable. Please try again later.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        96
+      ],
+      "id": "4ecebb0c-b826-498d-bbf5-01efe1557154",
+      "name": "Notify Book Search Error",
+      "webhookId": "061dca40-62db-4276-a1ce-ade779bb0e78",
+      "credentials": {
+  "telegramApi": {
+    "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+    "name": "BookScout Telegram Credential"
+  }
+}
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Receive Telegram Message').first().json.message.chat.id.toString() }}",
+        "text": "=⚠️ BookScout is temporarily unavailable. Please try again later.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        272
+      ],
+      "id": "83930ca9-0bfe-48af-88db-f276a436ef08",
+      "name": "Notify Recommendation Error",
+      "webhookId": "e6152f83-42f2-40cc-9e04-dee3f62224f1",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+  "telegramApi": {
+    "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+    "name": "BookScout Telegram Credential"
+  }
+}
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -48
+      ],
+      "id": "44367c09-5f09-4138-a908-90c07fb0efac",
+      "name": "Receive Telegram Message",
+      "webhookId": "56827e68-729b-423b-9c6b-b02f37cb4302",
+      "credentials": {
+  "telegramApi": {
+    "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+    "name": "BookScout Telegram Credential"
+  }
+}
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Book Assistant",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Book Assistant",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Book Assistant",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Search Open Library": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Book Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route User Request": {
+      "main": [
+        [
+          {
+            "node": "Run OCR Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run Book Search Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run Book Recommendation Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Book Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Book Assistant": {
+      "main": [
+        [
+          {
+            "node": "Send AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run OCR Workflow": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Notify OCR Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Book Search Workflow": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Notify Book Search Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Book Recommendation Workflow": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Notify Recommendation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Route User Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "M6hAyG6iz29cuogg",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  
+  "nodeGroups": [],
+  "tags": []
+}
